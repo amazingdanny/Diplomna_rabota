@@ -1,6 +1,6 @@
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      =  env("DATABASE_URL")
 }
 
 generator client {
@@ -8,10 +8,39 @@ generator client {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
+  id        String      @id @default(uuid())
   email     String    @unique
   password  String
+  firstName String?
+  lastName  String?
   createdAt DateTime  @default(now())
   isWorking Boolean   @default(false)
   startedAt DateTime?
+  role     Role      @default(USER)
+  workSessions WorkSession[]
+  currentSessionId String?
+  notes       Note[]
+}
+
+model WorkSession {
+  id        String   @id @default(uuid())
+  startedAt DateTime
+  endedAt   DateTime?
+  time      Int?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Note{
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  USER
+  ADMIN
 }

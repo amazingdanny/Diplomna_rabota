@@ -1,17 +1,16 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
+  const token = (await cookies()).get("token")?.value;
 
-  if (!authHeader) {
+  if (!token) {
     return NextResponse.json(
       { success: false, message: "No token provided" },
       { status: 401 }
     );
   }
-
-  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = jwt.verify(
