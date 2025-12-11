@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import users from "@/data/users.json";
 import jwt from "jsonwebtoken";
+import {prisma} from "@/lib/prisma";
 
 export async function POST(request: Request) {
   const { email, password } = await request.json();
-    const user = users.find((u) => u.email === email && u.password === password);
+  const user = await prisma.user.findFirst({
+  where: {
+    email: email,
+    password: password
+  }
+})
+
 
   if (!user) {
     return NextResponse.json(
