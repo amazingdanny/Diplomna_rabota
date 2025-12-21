@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from "react";
+    import EditUserMenu from "./EditUserMenu";
 
 type UserItem = {
 	id: string;
@@ -14,23 +15,24 @@ export default function UsersManager() {
 	const [users, setUsers] = useState<UserItem[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [editingUser, setEditingUser] = useState<UserItem | null>(null);
+
+	const loadUsers = async () => {
+		try {
+			const res = await fetch("/api/users/list");
+			const data = await res.json();
+			if (!res.ok || !data.success) {
+				throw new Error(data.message || "Failed to load users");
+			}
+			setUsers(data.users || []);
+		} catch (err: any) {
+			setError(err.message || "Failed to load users");
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
 	useEffect(() => {
-		const loadUsers = async () => {
-			try {
-				const res = await fetch("/api/users/list");
-				const data = await res.json();
-				if (!res.ok || !data.success) {
-					throw new Error(data.message || "Failed to load users");
-				}
-				setUsers(data.users || []);
-			} catch (err: any) {
-				setError(err.message || "Failed to load users");
-			} finally {
-				setIsLoading(false);
-			}
-		};
-
 		loadUsers();
 	}, []);
 
@@ -72,7 +74,7 @@ export default function UsersManager() {
 									<td className="px-4 py-3 text-right">
 										<button
 											className="rounded-md bg-zinc-900 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:focus:ring-offset-zinc-900"
-											disabled
+											onClick={() => setEditingUser(user)}
 										>
 											Edit
 										</button>
@@ -90,6 +92,16 @@ export default function UsersManager() {
 					</table>
 				</div>
 			)}
+
+				{editingUser && (
+					<EditUserMenu
+						user={editingUser}
+						onClose={() => setEditingUser(null)}
+						onChanged={async () => {
+							await loadUsers();
+						}}
+					/>
+				)}
 		</div>
 	);
 }

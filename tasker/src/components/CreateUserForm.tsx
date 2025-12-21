@@ -9,6 +9,7 @@ const createUserSchema = z.object({
     firstName: z.string().optional(),
     lastName: z.string().optional(),
     role: z.enum(["USER", "ADMIN"]),
+    hours: z.number().int().min(1, "Work hours must be at least 1"),
 });
 
 export default function CreateUserForm() {
@@ -17,11 +18,13 @@ export default function CreateUserForm() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [role, setRole] = useState("USER");
+    const [hours, setHours] = useState("8");
     const [emailError, setEmailError] = useState("");
     const [passwordError, setPasswordError] = useState("");
     const [firstNameError, setFirstNameError] = useState("");
     const [lastNameError, setLastNameError] = useState("");
     const [roleError, setRoleError] = useState("");
+    const [hoursError, setHoursError] = useState("");
     const [formError, setFormError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +39,8 @@ export default function CreateUserForm() {
         setRoleError("");
         setFormError("");
         setSuccessMessage("");
-        const result = createUserSchema.safeParse({ email, password, firstName, lastName, role });
+        const parsedHours = Number(hours);
+        const result = createUserSchema.safeParse({ email, password, firstName, lastName, role, hours: parsedHours });
         if (!result.success) {
             const issues = result.error.flatten((issue) => issue.message).fieldErrors;
             setEmailError(issues.email?.[0] || "");
@@ -44,16 +48,17 @@ export default function CreateUserForm() {
             setFirstNameError(issues.firstName?.[0] || "");
             setLastNameError(issues.lastName?.[0] || "");
             setRoleError(issues.role?.[0] || "");
+            setHoursError(issues.hours?.[0] || "");
             setIsLoading(false);
             return;
         }
         try {
-            const response = await fetch("/api/createUser", {
+            const response = await fetch("/api/users/create", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ email, password, firstName, lastName, role }),
+                body: JSON.stringify({ email, password, firstName, lastName, role, hours: parsedHours }),
             });
 
             const data = await response.json();
@@ -65,6 +70,7 @@ export default function CreateUserForm() {
                 setFirstName("");
                 setLastName("");
                 setRole("USER");
+                setHours("8");
             } else {
                 setFormError(data.error || "Failed to create user");
             }
@@ -119,6 +125,27 @@ export default function CreateUserForm() {
                     />
                     {lastNameError && (
                         <p className="mt-1 text-sm text-red-500">{lastNameError}</p>
+                    )}
+                </div>
+
+                <div>
+                    <label
+                        htmlFor="hours"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                    >
+                        Work Hours (per day)
+                    </label>
+                    <input
+                        type="number"
+                        id="hours"
+                        min="1"
+                        value={hours}
+                        onChange={(e) => setHours(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
+                        placeholder="8"
+                    />
+                    {hoursError && (
+                        <p className="mt-1 text-sm text-red-500">{hoursError}</p>
                     )}
                 </div>
 

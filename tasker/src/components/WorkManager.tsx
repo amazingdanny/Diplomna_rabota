@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { setActiveWorkSessionCookie, clearActiveWorkSessionCookie, getActiveWorkSessionCookie } from "@/app/lib/workSessionCookie";
 export default function WorkManager() {
     const [isWorking, setIsWorking] = useState(false);
     const [workInterval, setWorkInterval] = useState<NodeJS.Timeout | null>(null);
@@ -22,12 +23,39 @@ export default function WorkManager() {
     const pastSessions = todaySessions.filter((session) => session.endedAt !== null);
     const lastFinishedSession = pastSessions[0] ?? null;
 
+ 
+    const totalMinutesToday = pastSessions.reduce((sum, session) => sum + (session.time ?? 0), 0);
+
+
+    const formatMinutes = (mins: number | null | undefined) => {
+        if (mins == null || Number.isNaN(mins)) return '—';
+        const total = Math.max(0, Math.floor(mins));
+        const hours = Math.floor(total / 60);
+        const minutes = total % 60;
+        if (hours > 0) {
+            return `${hours} hour${hours === 1 ? '' : 's'}${minutes > 0 ? ` ${minutes} min${minutes === 1 ? '' : 's'}` : ''}`;
+        }
+        return `${minutes} min${minutes === 1 ? '' : 's'}`;
+    };
+
    
-    // Initialize startedAt when work starts
+    // Initialize at work start
     useEffect(() => {
-        if (isWorking && !startedAt) {
+        if (!isWorking || startedAt) return;
+
+        const cookie = getActiveWorkSessionCookie();
+
+        if (cookie?.startedAt) {
+            const recoveredStart = new Date(cookie.startedAt);
             setStartedWork(true);
-            setStartedAt(new Date());
+            setStartedAt(recoveredStart);
+            setCurrentWorkTime(
+            (Date.now() - recoveredStart.getTime()) / 1000 / 60
+            );
+        } else {
+            const now = new Date();
+            setStartedWork(true);
+            setStartedAt(now);
             setCurrentWorkTime(0);
         }
     }, [isWorking, startedAt]);
@@ -51,11 +79,16 @@ export default function WorkManager() {
 
     const fetchTodaySessions = async () => {
         const response = await fetch('/api/me');
-        if (!response.ok) {
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (e) {
+            data = null;
+        }
+        if (!response.ok || !data || !data.user) {
             router.push('/login');
             return;
         }
-        const data = await response.json();
         const userID = data.user.id;
 
         const res = await fetch('/api/userSessionsToday', {
@@ -91,12 +124,17 @@ export default function WorkManager() {
 
     const toggleWork = async () => {
         const response = await fetch('/api/me');
-        const data = await response.json();
-        const userID = data.user.id;
-        if (!response.ok) {
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (e) {
+            data = null;
+        }
+        if (!response.ok || !data || !data.user) {
             router.push('/login');
             return;
         }
+        const userID = data.user.id;
         const sessionRes = await fetch('/api/getUserWorkSession', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -105,16 +143,20 @@ export default function WorkManager() {
         const sessionData = await sessionRes.json();
         const currentSessionId = sessionData.currentSessionId;
 
-        // Check current state BEFORE updating
+ 
         if (!isWorking) {
-            // Starting work
-            await fetch('/api/startWork', {
+
+            const res = await fetch('/api/startWork', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: userID }),
             });
+            const startData = await res.json();
+            if (startData.workSession) {
+                setActiveWorkSessionCookie({ sessionId: startData.workSession.id, startedAt: startData.workSession.startedAt  });
+            }
         } else {
-            // Stopping work
+
             const activeId = activeSession?.id || currentSessionId;
             if (activeId) {
                 await fetch('/api/stopWork', {
@@ -123,19 +165,23 @@ export default function WorkManager() {
                     body: JSON.stringify({ userId: userID, currentSessionId: activeId }),
                 });
             }
+            clearActiveWorkSessionCookie();
         }
         
-        // Refresh today's sessions list and sync state from server
+    
         await fetchTodaySessions();
     };
 
     return (
         <div className="h-screen w-full overflow-hidden flex items-center justify-center bg-zinc-50 px-3 py-4 dark:bg-black">
-            <div className="w-full max-w-3xl max-h-[82vh] overflow-hidden rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                <div className="flex items-center justify-between gap-3">
+            <div className="w-full max-w-4xl rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
+                <div className="flex items-center justify-between gap-3 overflow-hidden">
                     <div>
                         <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Work Manager</h1>
                         <p className="text-sm text-zinc-500 dark:text-zinc-400">Track your active and recent sessions.</p>
+                        <div className="mt-2 text-blue-600 dark:text-blue-400 font-semibold">
+                            Total time worked today: {formatMinutes(totalMinutesToday + (startedAt ? Math.max(0, Math.floor((Date.now() - startedAt.getTime()) / 1000 / 60)) : 0))}
+                        </div>
                     </div>
                     <button
                         onClick={toggleWork}
@@ -150,13 +196,13 @@ export default function WorkManager() {
                 </div>
 
                 {/* Current session block */}
-                <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm dark:border-zinc-800 dark:bg-zinc-800/70">
+                <div className="mt-5 rounded-xl border border-zinc-200  p-4 text-sm dark:border-zinc-800 dark:bg-zinc-800/70">
                     <div className="font-semibold text-zinc-900 dark:text-zinc-50">Current Session</div>
                     {activeSession ? (
                         <div className="mt-2 grid grid-cols-1 gap-1 text-zinc-800 dark:text-zinc-100 sm:grid-cols-2">
                             <div>Started at: {new Date(activeSession.startedAt).toLocaleTimeString()}</div>
                             <div>
-                                Duration: {startedAt ? Math.max(0, Math.floor((Date.now() - startedAt.getTime()) / 1000 / 60)) : 0} min
+                                Duration: {formatMinutes(startedAt ? Math.max(0, Math.floor((Date.now() - startedAt.getTime()) / 1000 / 60)) : 0)}
                             </div>
                         </div>
                     ) : (
@@ -182,7 +228,7 @@ export default function WorkManager() {
                                             const started = new Date(lastFinishedSession.startedAt);
                                             const ended = lastFinishedSession.endedAt ? new Date(lastFinishedSession.endedAt) : null;
                                             const durationMinutes = lastFinishedSession.time ?? (ended ? Math.round((ended.getTime() - started.getTime()) / 1000 / 60) : null);
-                                            return durationMinutes !== null ? `${durationMinutes} min` : '—';
+                                            return formatMinutes(durationMinutes);
                                         })()
                                     }
                                 </div>
@@ -202,7 +248,7 @@ export default function WorkManager() {
                     {pastSessions.length === 0 && (
                         <p className="mt-2 text-sm text-zinc-500">No sessions started today.</p>
                     )}
-                    <div className="mt-1 h-52 sm:h-56 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-800/70">
+                    <div className="mt-1 h-52 sm:h-56  rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-800/70">
                         <ul className="space-y-2">
                             {pastSessions.map((session) => {
                                 const started = new Date(session.startedAt);
@@ -220,7 +266,7 @@ export default function WorkManager() {
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="font-medium">Duration</span>
-                                            <span>{durationMinutes !== null ? `${durationMinutes} min` : '—'}</span>
+                                            <span>{formatMinutes(durationMinutes)}</span>
                                         </div>
                                     </li>
                                 );

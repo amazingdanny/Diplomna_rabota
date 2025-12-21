@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, firstName, lastName, role } = body;
+    const { email, password, firstName, lastName, role, hours } = body;
 
     // Validate required fields
     if (!email || !password) {
@@ -48,6 +48,7 @@ export async function POST(request: Request) {
         role: true,
         createdAt: true,
         isWorking: true,
+        hours: true,
       },
     });
 

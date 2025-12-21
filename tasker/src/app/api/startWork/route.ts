@@ -20,6 +20,10 @@ export async function POST(request: Request) {
             userId: userId,
             startedAt: new Date(),
         },
+        select: {
+            id: true,
+            startedAt: true,
+        },
         });
 
     const updatedUser = await prisma.user.update({
@@ -40,7 +44,7 @@ export async function POST(request: Request) {
       },
     });
     return NextResponse.json(
-      { success: true, message: "Work started", user: updatedUser },
+      { success: true, message: "Work started", user: updatedUser, workSession: newWorkSession },
       { status: 200 }
     );
   } catch (error) {

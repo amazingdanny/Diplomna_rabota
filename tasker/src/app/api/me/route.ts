@@ -23,9 +23,11 @@ export async function GET(request: Request) {
       user: decoded
     });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, message: "Invalid token" },
+    const response = NextResponse.json(
+      { success: false, message: "Token expired" },
       { status: 401 }
     );
+    response.cookies.set("token", "", { maxAge: 0 });
+    return response;
   }
 }

@@ -24,6 +24,7 @@ export async function POST(request: Request) {
         where: { id: currentSessionId },
         data: {
             endedAt: new Date(),
+            time: Math.floor((new Date().getTime() - (await prisma.workSession.findUnique({where: {id: currentSessionId}}))!.startedAt.getTime()) / 1000 /60 ) // minutes
         },
         });
     

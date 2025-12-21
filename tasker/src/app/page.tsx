@@ -2,7 +2,8 @@ import Image from "next/image";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import WorkManager from "@/components/WorkManager";
-
+import ToDo from "@/components/ToDo";
+import UserProjects from "@/components/UserProjects";
 
 export default async function Home() {
    const token = (await cookies()).get("token")?.value;
@@ -13,9 +14,17 @@ export default async function Home() {
 
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <WorkManager />
+    <div className="h-screen w-screen overflow-hidden bg-zinc-50 font-sans dark:bg-black">
+      <main className="h-screen w-screen overflow-hidden flex gap-7 bg-white dark:bg-black">
+        <div className="flex-1 overflow-y-auto pt-24 px-4">
+          <ToDo />
+        </div>
+        <div className="flex-1  flex items-start justify-center pt-6">
+          <WorkManager />
+        </div>
+        <div className="flex-1 overflow-y-auto pt-24 px-4">
+          <UserProjects />
+        </div>
       </main>
     </div>
   );

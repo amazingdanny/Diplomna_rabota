@@ -4,12 +4,18 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { userId, newPassword } = body;
+    const { userId, newPassword, selfRole } = body;
 
     if (!userId) {
         return NextResponse.json(
             { success: false, message: "User ID is required" },
             { status: 400 }
+        );
+    }
+    if (selfRole !== "ADMIN") {
+        return NextResponse.json(
+            { success: false, message: "Unauthorized" },
+            { status: 403 }
         );
     }
     if (!newPassword) {

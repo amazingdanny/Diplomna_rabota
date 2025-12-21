@@ -3,10 +3,13 @@ import { prisma } from "@/lib/prisma";
 
 export async function DELETE(request: Request) {
   try {
-    const { userId } = await request.json();
+    const { userId, selfRole } = await request.json();
     
     if (!userId) {
         return NextResponse.json( { success: false, message: "User ID is required" }, { status: 400 } );
+    }
+    if (selfRole !== "ADMIN") {
+        return NextResponse.json( { success: false, message: "Unauthorized" }, { status: 403 } );
     }
 
     // Delete user work sessions first due to foreign key constraint

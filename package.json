@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "chartjs-adapter-date-fns": "^3.0.0",
     "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
