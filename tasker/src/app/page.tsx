@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import WorkManager from "@/components/WorkManager";
 import ToDo from "@/components/ToDo";
 import UserProjects from "@/components/UserProjects";
+import BtnCreateTicket from "@/components/BtnCreateTicket";
+
 
 export default async function Home() {
    const token = (await cookies()).get("token")?.value;
@@ -24,7 +26,9 @@ export default async function Home() {
         </div>
         <div className="flex-1 overflow-y-auto pt-24 px-4">
           <UserProjects />
+          <BtnCreateTicket />
         </div>
+
       </main>
     </div>
   );

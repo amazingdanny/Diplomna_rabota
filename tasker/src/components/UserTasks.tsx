@@ -69,6 +69,37 @@ export default function UserTasks() {
     }
   }
 
+  const [deletingIds, setDeletingIds] = useState<string[]>([])
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+
+  const performDelete = async (taskId: string) => {
+    setDeletingIds((s) => [...s, taskId])
+    try {
+      const res = await fetch("/api/task/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to delete task")
+      }
+      setTasks((prev) => prev.filter((t) => t.id !== taskId))
+      setConfirmDeleteId(null)
+    } catch (err: any) {
+      console.error(err?.message || err)
+      setError(err?.message || "Failed to delete task")
+    } finally {
+      setDeletingIds((s) => s.filter((id) => id !== taskId))
+    }
+  }
+
+  const onDeleteClick = (taskId: string) => {
+    // Show inline confirm UI instead of using window.confirm, because browser
+    // prompt dialogs can be blocked for localhost and cause accidental no-ops.
+    setConfirmDeleteId((cur) => (cur === taskId ? null : taskId))
+  }
+
   return (
     <div className="w-full max-w-4xl rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <div className="mb-4">
@@ -85,7 +116,7 @@ export default function UserTasks() {
 
       {!isLoading && !error && (
         <div className="space-y-2">
-          {tasks.length === 0 ? (
+            {tasks.length === 0 ? (
             <p className="text-sm text-zinc-500">No tasks assigned.</p>
           ) : (
             tasks.map((task) => (
@@ -127,6 +158,37 @@ export default function UserTasks() {
                     <span>{new Date(task.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
+                  <div className="flex items-center">
+                    {confirmDeleteId === task.id ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => performDelete(task.id)}
+                          disabled={deletingIds.includes(task.id)}
+                          className="rounded-md bg-red-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {deletingIds.includes(task.id) ? "Deleting..." : "Confirm"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteId(null)}
+                          disabled={deletingIds.includes(task.id)}
+                          className="rounded-md px-3 py-1 text-sm font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed dark:text-zinc-200 dark:hover:bg-zinc-800/30"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteClick(task.id)}
+                        disabled={deletingIds.includes(task.id)}
+                        className="ml-2 rounded-md px-3 py-1 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed dark:hover:bg-red-900/30"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
               </div>
             ))
           )}

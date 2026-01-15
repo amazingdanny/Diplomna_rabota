@@ -7,7 +7,8 @@ type DayTotals = Record<string, number> // key: yyyy-mm-dd, value: hours worked
 type Props = {
   dayTotals: DayTotals
   targetHours: number
-  referenceDate?: Date 
+  referenceDate?: Date
+  onDateClick?: (date: Date) => void
 }
 
 // Normalize date to local midnight
@@ -59,7 +60,7 @@ function colorFor(hours: number, target: number) {
   return "bg-red-200 text-red-900 dark:bg-red-900/60 dark:text-red-100"
 }
 
-export default function WorkCalendar({ dayTotals, targetHours, referenceDate }: Props) {
+export default function WorkCalendar({ dayTotals, targetHours, referenceDate, onDateClick }: Props) {
   const initial = referenceDate ? atMidnight(referenceDate) : atMidnight(new Date())
   const [viewDate, setViewDate] = useState<Date>(initial)
 
@@ -100,6 +101,9 @@ export default function WorkCalendar({ dayTotals, targetHours, referenceDate }: 
       : isFuture
         ? "bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500"
         : colorFor(hours, targetHours)
+    
+    const dateForClick = new Date(d)
+    
     cells.push(
       <div
         key={key}
@@ -107,8 +111,10 @@ export default function WorkCalendar({ dayTotals, targetHours, referenceDate }: 
           "flex flex-col items-center justify-center rounded border text-xs h-16",
           inMonth ? "border-zinc-200 dark:border-zinc-700" : "border-dashed border-zinc-100 text-zinc-400 dark:border-zinc-800/60",
           colorClass,
+          onDateClick ? "cursor-pointer hover:ring-2 hover:ring-blue-500 hover:ring-offset-1 transition-all" : "",
         ].join(" ")}
         title={`${key}: ${hours.toFixed(2)}h`}
+        onClick={() => onDateClick?.(dateForClick)}
       >
         <div className="text-[11px] font-semibold">{d.getDate()}</div>
         <div className="text-[10px]">{hours.toFixed(1)}h</div>

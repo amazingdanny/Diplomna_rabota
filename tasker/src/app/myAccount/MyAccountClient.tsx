@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import BtnUserTasks from "@/components/BtnUserTasks";
 import Link from "next/link";
 import WorkCalendar from "@/components/WorkCalendar";
+import ListTicketsToYou from "@/components/ListTicketsToYou";
 
 export default function MyAccountClient() {
    const router = useRouter();
@@ -77,18 +78,17 @@ export default function MyAccountClient() {
 
     return (
         <div className="h-screen w-screen overflow-hidden bg-zinc-50 font-sans dark:bg-black">
-            <main className="h-screen w-screen overflow-y-auto flex flex-col items-center py-12 px-4">
-                <div className="w-full max-w-2xl">
-                    <div className="mb-12 text-center">
-                        <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
-                            My Account
-                        </h1>
-                        <p className="text-zinc-600 dark:text-zinc-400">
-                            Manage your profile and access your tasks
-                        </p>
+            <main className="h-screen w-screen overflow-y-auto py-12">
+                
+
+                <div className="flex gap-6">
+                    <div className="w-full max-w-md flex-shrink-0 pl-4">
+                         <ListTicketsToYou />
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="flex-1 flex pr-4">
+                        <div className="w-full max-w-2xl ml-30">
+                        <div className="space-y-4">
                         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                             <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
                                 Quick Actions
@@ -106,15 +106,6 @@ export default function MyAccountClient() {
                         </div>
 
                         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                            <h2 className="mb-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                                Welcome Back
-                            </h2>
-                            <p className="text-zinc-600 dark:text-zinc-400">
-                                View and manage your assigned tasks, track project progress, and stay updated on your work items.
-                            </p>
-                        </div>
-
-                        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                             <h2 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
                                 Work Calendar
                             </h2>
@@ -123,6 +114,8 @@ export default function MyAccountClient() {
                             </p>
                             <WorkCalendar dayTotals={dayTotals} targetHours={targetHours || 8} />
                         </div>
+                        </div>
+                    </div>
                     </div>
                 </div>
             </main>

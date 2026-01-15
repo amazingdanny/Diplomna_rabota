@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from "react";
-    import EditUserMenu from "./EditUserMenu";
+import { useRouter } from "next/navigation";
 
 type UserItem = {
 	id: string;
@@ -12,10 +12,10 @@ type UserItem = {
 };
 
 export default function UsersManager() {
+	const router = useRouter();
 	const [users, setUsers] = useState<UserItem[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [editingUser, setEditingUser] = useState<UserItem | null>(null);
 
 	const loadUsers = async () => {
 		try {
@@ -55,7 +55,7 @@ export default function UsersManager() {
 							<tr>
 								<th className="px-4 py-3">Name</th>
 								<th className="px-4 py-3">Email</th>
-								<th className="px-4 py-3">Created</th>
+								
 								<th className="px-4 py-3 text-right">Actions</th>
 							</tr>
 						</thead>
@@ -68,13 +68,11 @@ export default function UsersManager() {
 											: '—'}
 									</td>
 									<td className="px-4 py-3 text-zinc-700 dark:text-zinc-200">{user.email}</td>
-									<td className="px-4 py-3 text-zinc-600 dark:text-zinc-300">
-										{new Date(user.createdAt).toLocaleDateString()}
-									</td>
+									
 									<td className="px-4 py-3 text-right">
 										<button
 											className="rounded-md bg-zinc-900 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:focus:ring-offset-zinc-900"
-											onClick={() => setEditingUser(user)}
+											onClick={() => router.push(`/control_panel/users/${user.id}`)}
 										>
 											Edit
 										</button>
@@ -93,15 +91,6 @@ export default function UsersManager() {
 				</div>
 			)}
 
-				{editingUser && (
-					<EditUserMenu
-						user={editingUser}
-						onClose={() => setEditingUser(null)}
-						onChanged={async () => {
-							await loadUsers();
-						}}
-					/>
-				)}
 		</div>
 	);
 }
