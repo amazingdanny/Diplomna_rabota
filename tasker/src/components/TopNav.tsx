@@ -38,6 +38,12 @@ export default function TopNav() {
       >
         My Account
       </Link>
+      <Link
+        href="/chat"
+        className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-black shadow-sm hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:hover:bg-zinc-800"
+      >
+        Chat
+      </Link>
       <button
         onClick={handleLogout}
         disabled={isLoggingOut}
