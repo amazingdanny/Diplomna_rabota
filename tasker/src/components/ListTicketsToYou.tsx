@@ -60,14 +60,14 @@ export default function ListTicketsToYou() {
           throw new Error(data.message || "Failed to load tickets")
         }
         setTickets(data.tickets || [])
-      } catch (err: any) {
-        setError(err.message || "Failed to load tickets")
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load tickets")
       } finally {
         setIsLoading(false)
       }
     }
     loadTickets()
-  }, [router])
+  }, [])
 
   const toggleGroup = (group: string) => {
     setOpenGroups((prev) => ({

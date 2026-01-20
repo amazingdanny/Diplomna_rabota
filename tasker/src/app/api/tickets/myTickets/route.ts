@@ -55,7 +55,8 @@ export async function POST(request: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching tickets:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error fetching tickets:", errorMessage);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }
