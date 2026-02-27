@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import UnfinishedProjects from "./UnfinishedProjects";
 
 export default function BtnUnfinishedProjects() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   return (
     <>
